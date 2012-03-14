@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Genki Note]]></title>
-  <link href="http://genki0406.github.com/atom.xml" rel="self"/>
+  <title><![CDATA[Category: octopress | Genki Note]]></title>
+  <link href="http://genki0406.github.com/blog/categories/octopress/atom.xml" rel="self"/>
   <link href="http://genki0406.github.com/"/>
   <updated>2012-03-14T23:47:20+09:00</updated>
   <id>http://genki0406.github.com/</id>
@@ -18,25 +18,21 @@
     <link href="http://genki0406.github.com/blog/2012/03/14/octopress-deploy/"/>
     <updated>2012-03-14T23:23:00+09:00</updated>
     <id>http://genki0406.github.com/blog/2012/03/14/octopress-deploy</id>
-    <content type="html"><![CDATA[<p>記事の新規投稿<br /></p>
+    <content type="html"><![CDATA[<p>記事の新規投稿<br />
+<code>
+rake new_post['title']
+</code></p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>rake new_post['title']</span></code></pre></td></tr></table></div></figure>
+<p>記事を書いたらデプロイ(ちなみに記事の記述方法はMarkDown形式)<br />
+<code>
+rake gen_deploy
+</code></p>
 
-
-<p>記事を書いたらデプロイ(ちなみに記事の記述方法はMarkDown形式)<br /></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>rake gen_deploy</span></code></pre></td></tr></table></div></figure>
-
-
-<p>プレビューも見れる<br /></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>rake generate
-</span><span class='line'>rake previwe</span></code></pre></td></tr></table></div></figure>
-
+<p>プレビューも見れる<br />
+<code>
+rake generate
+rake previwe
+</code></p>
 
 <hr />
 
