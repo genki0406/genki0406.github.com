@@ -4,7 +4,7 @@
   <title><![CDATA[Category: octopress | Genki Note]]></title>
   <link href="http://genki0406.github.com/blog/categories/octopress/atom.xml" rel="self"/>
   <link href="http://genki0406.github.com/"/>
-  <updated>2012-04-06T00:07:19+09:00</updated>
+  <updated>2012-04-29T14:26:56+09:00</updated>
   <id>http://genki0406.github.com/</id>
   <author>
     <name><![CDATA[Genki]]></name>
@@ -34,8 +34,6 @@ rake generate
 rake previwe
 </code></p>
 
-<hr />
-
 <h2>参考サイト</h2>
 
 <ul>
@@ -56,8 +54,6 @@ rake previwe
   今はgithubと連携してブログまで書けちゃうんですね。<br />
   ブログ続いた事ないけど、今回の奴はデザインもいい感じだし続けられるかも！<br />
   形から入るって大事ですよね、頑張る！<br /></p>
-
-<hr />
 
 <h2>参考サイト</h2>
 
