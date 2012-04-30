@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Node.js | Genki Note]]></title>
   <link href="http://genki0406.github.com/blog/categories/node-js/atom.xml" rel="self"/>
   <link href="http://genki0406.github.com/"/>
-  <updated>2012-04-30T22:50:21+09:00</updated>
+  <updated>2012-04-30T22:54:21+09:00</updated>
   <id>http://genki0406.github.com/</id>
   <author>
     <name><![CDATA[Genki]]></name>
@@ -220,7 +220,9 @@
 この時点でCentOSのバージョンが5.8、Glibcのバージョンは2.5。
 あと0.1足りない。。。</p>
 
-<p>CentOSを6系にあげないとダメなのかな〜。
+<h2>まとめ</h2>
+
+<p>CentOSを6系にあげないとダメなのかも。
 6系は調べたらクリーンインストールしないとダメっぽいからやりたくないんだが。
 誰か5系でGlibcのバージョンを2.6以上に上げたことある方やり方を教えて下さい(人∀・)ﾀﾉﾑ</p>
 ]]></content>
