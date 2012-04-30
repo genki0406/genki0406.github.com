@@ -4,7 +4,7 @@
   <title><![CDATA[Genki Note]]></title>
   <link href="http://genki0406.github.com/atom.xml" rel="self"/>
   <link href="http://genki0406.github.com/"/>
-  <updated>2012-04-29T17:17:46+09:00</updated>
+  <updated>2012-04-30T22:50:21+09:00</updated>
   <id>http://genki0406.github.com/</id>
   <author>
     <name><![CDATA[Genki]]></name>
@@ -12,6 +12,183 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Meteorのインストールで Failed dependencies]]></title>
+    <link href="http://genki0406.github.com/blog/2012/04/30/meteor-install-error/"/>
+    <updated>2012-04-30T22:20:00+09:00</updated>
+    <id>http://genki0406.github.com/blog/2012/04/30/meteor-install-error</id>
+    <content type="html"><![CDATA[<p>今流行のNode.jsのフレームワークMeteorでアプリを構築することになったので
+早速サーバーにインストールしたが、以下のエラーが出て入らない。。。
+ローカルのMacにはすんなり入ったのに。。。。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Installing /tmp/meteor-install-waQ1606/meteor-0.3.5-1.x86_64.rpm
+</span><span class='line'>error: Failed dependencies:
+</span><span class='line'>   libc.so.6(GLIBC_2.6)(64bit) is needed by meteor-0.3.5-1.x86_64
+</span><span class='line'>   libc.so.6(GLIBC_2.7)(64bit) is needed by meteor-0.3.5-1.x86_64
+</span><span class='line'>   libc.so.6(GLIBC_2.9)(64bit) is needed by meteor-0.3.5-1.x86_64
+</span><span class='line'>   libstdc++.so.6(GLIBCXX_3.4.9)(64bit) is needed by meteor-0.3.5-1.x86_64
+</span><span class='line'>Installation failed.</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>原因はGlibc</h2>
+
+<p>調べてみるとどうやらGlibcというCの標準ライブラリが古いっぽい。
+ちなみにOSのバージョンはCentOS 5.6。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>yum update glibc</span></code></pre></td></tr></table></div></figure>
+
+
+<p>とかしてもupdateされない。
+んー、どうすればいいんや。
+このライブラリは根幹の物っぽいので、CentOSのバージョンを上げることを決意。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>yum update</span></code></pre></td></tr></table></div></figure>
+
+
+<p>でバージョンアップされると書いてあるが、updateされない。。
+なんでやー、と思って調べてたら、どうやらyumのリポジトリの設定がダメっぽい。
+これを他のサイトを参考に以下のように変更。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/etc/yum.repos.d/CentOS-Base.repo
+</span><span class='line'>
+</span><span class='line'>[base]
+</span><span class='line'>name=CentOS-$releasever - Base
+</span><span class='line'>#name = none
+</span><span class='line'>baseurl=http://mirror.centos.org/centos/$releasever/os/$basearch/
+</span><span class='line'>#baseurl = http://mirror.rightscale.com/centos/5.6/os/x86_64/archive/latest/
+</span><span class='line'>failovermethod=priority
+</span><span class='line'>gpgcheck=1
+</span><span class='line'>enabled=1
+</span><span class='line'>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+</span><span class='line'>
+</span><span class='line'>[addons]
+</span><span class='line'>name=CentOS-$releasever - Updates
+</span><span class='line'>#name = none
+</span><span class='line'>baseurl=http://mirror.centos.org/centos/$releasever/updates/$basearch/
+</span><span class='line'>#baseurl = http://mirror.rightscale.com/centos/5.6/addons/x86_64/archive/latest/
+</span><span class='line'>failovermethod=priority
+</span><span class='line'>gpgcheck=1
+</span><span class='line'>enabled=1
+</span><span class='line'>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+</span><span class='line'>
+</span><span class='line'>[centosplus]
+</span><span class='line'>name=CentOS-$releasever - Plus
+</span><span class='line'>#name = none
+</span><span class='line'>baseurl=http://mirror.centos.org/centos/$releasever/centosplus/$basearch/
+</span><span class='line'>#baseurl = http://mirror.rightscale.com/centos/5.6/centosplus/x86_64/archive/latest/
+</span><span class='line'>failovermethod=priority
+</span><span class='line'>gpgcheck=1
+</span><span class='line'>enabled=1
+</span><span class='line'>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+</span><span class='line'>
+</span><span class='line'>[extras]
+</span><span class='line'>name=CentOS-$releasever - Extras
+</span><span class='line'>#name = none
+</span><span class='line'>baseurl=http://mirror.centos.org/centos/$releasever/extras/$basearch/
+</span><span class='line'>#baseurl = http://mirror.rightscale.com/centos/5.6/extras/x86_64/archive/latest/
+</span><span class='line'>failovermethod=priority
+</span><span class='line'>gpgcheck=1
+</span><span class='line'>enabled=1
+</span><span class='line'>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+</span><span class='line'>
+</span><span class='line'>[updates]
+</span><span class='line'>name=CentOS-$releasever - Updates
+</span><span class='line'>#name = none
+</span><span class='line'>baseurl=http://mirror.centos.org/centos/$releasever/updates/$basearch/
+</span><span class='line'>#baseurl = http://mirror.rightscale.com/centos/5.6/updates/x86_64/archive/latest/
+</span><span class='line'>failovermethod=priority
+</span><span class='line'>gpgcheck=1
+</span><span class='line'>enabled=1
+</span><span class='line'>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+</span><span class='line'>
+</span><span class='line'>[epel]
+</span><span class='line'>name = none
+</span><span class='line'>baseurl = http://mirror.rightscale.com/epel/5/x86_64/archive/latest/
+</span><span class='line'>failovermethod=priority
+</span><span class='line'>gpgcheck=1
+</span><span class='line'>enabled=1
+</span><span class='line'>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPE</span></code></pre></td></tr></table></div></figure>
+
+
+<p>そして、再度Meteorのインストールを試みる！
+でもやっぱりダメ。。。(´；ω；｀)
+この時点でCentOSのバージョンが5.8、Glibcのバージョンは2.5。
+あと0.1足りない。。。</p>
+
+<p>CentOSを6系にあげないとダメなのかな〜。
+6系は調べたらクリーンインストールしないとダメっぽいからやりたくないんだが。
+誰か5系でGlibcのバージョンを2.6以上に上げたことある方やり方を教えて下さい(人∀・)ﾀﾉﾑ</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[KagoHack 第2回に参加してきました]]></title>
