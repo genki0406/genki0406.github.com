@@ -4,7 +4,7 @@
   <title><![CDATA[Category: AWS | Genki Note]]></title>
   <link href="http://genki0406.github.com/blog/categories/aws/atom.xml" rel="self"/>
   <link href="http://genki0406.github.com/"/>
-  <updated>2012-05-28T02:49:21+09:00</updated>
+  <updated>2012-05-28T02:55:03+09:00</updated>
   <id>http://genki0406.github.com/</id>
   <author>
     <name><![CDATA[Genki]]></name>
@@ -24,7 +24,7 @@
 URLに対してリクエストを送るのではなく、 サーバー側に実装したメソッドをクライアントから直接Callする。</p>
 
 <p>ここでまず問題になるのが、今までのようにPOST用のフォームを作ってサーバーにファイルを送るというやり方ができないということ。
-そこで、今回作ったのは、HTML5のFile APIを使い、ブラウザ側でDataURL形式でファイルを読み込み、
+そこで今回作ったのは、HTML5のFile APIを使い、ブラウザ側でDataURL形式でファイルを読み込み、
 それをサーバー側に実装したメソッドの引数に渡して呼び出し、
 S3にアップロードするというもの。</p>
 

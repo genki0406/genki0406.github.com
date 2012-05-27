@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Node.js | Genki Note]]></title>
   <link href="http://genki0406.github.com/blog/categories/node-js/atom.xml" rel="self"/>
   <link href="http://genki0406.github.com/"/>
-  <updated>2012-05-28T02:49:21+09:00</updated>
+  <updated>2012-05-28T02:55:03+09:00</updated>
   <id>http://genki0406.github.com/</id>
   <author>
     <name><![CDATA[Genki]]></name>
@@ -12,6 +12,200 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[MeteorでS3にファイルをアップロードしてみる]]></title>
+    <link href="http://genki0406.github.com/blog/2012/05/28/meteor-file-upload/"/>
+    <updated>2012-05-28T01:10:00+09:00</updated>
+    <id>http://genki0406.github.com/blog/2012/05/28/meteor-file-upload</id>
+    <content type="html"><![CDATA[<p>MeteorでS3にファイルアップロードしてみた。</p>
+
+<p>MeteorはリアルタイムなWebアプリを作ることを前提に設計されているので、そもそもルーティングという考え方がない。
+URLに対してリクエストを送るのではなく、 サーバー側に実装したメソッドをクライアントから直接Callする。</p>
+
+<p>ここでまず問題になるのが、今までのようにPOST用のフォームを作ってサーバーにファイルを送るというやり方ができないということ。
+そこで今回作ったのは、HTML5のFile APIを使い、ブラウザ側でDataURL形式でファイルを読み込み、
+それをサーバー側に実装したメソッドの引数に渡して呼び出し、
+S3にアップロードするというもの。</p>
+
+<h2>実装</h2>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>/file_upload.html<span class="nt">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;&lt;head&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;title&gt;</span>MeteorでFileUpload<span class="nt">&lt;/title&gt;</span>
+</span><span class='line'><span class="nt">&lt;/head&gt;&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;&lt;body&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;/body&gt;&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;&lt;template</span> <span class="na">name=</span><span class="s">&quot;main&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;h1&gt;</span>ファイルアップ！！<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">&quot;read_button&quot;</span> <span class="na">type=</span><span class="s">&quot;file&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;/template&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>普通にMeteorの書き方でHTMLを用意する。
+ファイルアップ用にfileのinputを用意。
+formでPOSTするわけではないのでformタグは不要。</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="err">/file_upload.coffee&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="k">if</span> <span class="nx">Meteor</span><span class="p">.</span><span class="nx">is_client</span>
+</span><span class='line'>  <span class="nx">Template</span><span class="p">.</span><span class="nx">main</span><span class="p">.</span><span class="nx">events</span> <span class="o">=&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="s1">&#39;change #read_button&#39;</span><span class="o">:</span> <span class="p">(</span><span class="nx">evt</span><span class="p">)</span> <span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">file</span> <span class="o">=</span> <span class="nx">evt</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">reader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FileReader</span>
+</span><span class='line'>  <span class="nx">reader</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="p">((</span><span class="nx">file</span><span class="p">)</span> <span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="nx">evt</span><span class="p">)</span> <span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span>
+</span><span class='line'>      <span class="nx">Meteor</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="s2">&quot;file_upload&quot;</span><span class="p">,</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">evt</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">result</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">)(</span><span class="nx">file</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">reader</span><span class="p">.</span><span class="nx">readAsDataURL</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;</span><span class="err">/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>read_buttonにchangeイベントをバインド。
+イベント発生時にファイルの中身をFileReaderを使いDataURL形式で読み取る。</p>
+
+<p>読み取りが終わった時に呼ばれるFileReaderのonloadイベントに、
+サーバー側のメソッドfile_uploadをファイル情報とFileReaderで読み取った
+DataURLを渡してCall。</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="err">/file_upload.coffee&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="k">if</span> <span class="nx">Meteor</span><span class="p">.</span><span class="nx">is_server</span>
+</span><span class='line'>  <span class="nx">require</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">strong</span><span class="o">&gt;</span><span class="nx">meteor_bootstrap</span><span class="o">&lt;</span><span class="err">/strong&gt;.require</span>
+</span><span class='line'>  <span class="nx">knox</span> <span class="o">=</span> <span class="nx">require</span> <span class="s2">&quot;knox&quot;</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>  <span class="nx">Meteor</span><span class="p">.</span><span class="nx">methods</span><span class="p">(</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="nx">file_upload</span><span class="o">:</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">stream</span><span class="p">)</span> <span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">client</span> <span class="o">=</span> <span class="nx">knox</span><span class="p">.</span><span class="nx">createClient</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;key&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">secret</span><span class="o">:</span> <span class="s2">&quot;secretKey&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">bucket</span><span class="o">:</span> <span class="s2">&quot;bucketName&quot;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">req</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>    <span class="s2">&quot;Content-Length&quot;</span><span class="o">:</span> <span class="nx">file</span><span class="p">.</span><span class="nx">size</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;Content-Type&quot;</span><span class="o">:</span> <span class="nx">file</span><span class="p">.</span><span class="nx">type</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">req</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;response&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="o">-&amp;</span><span class="nx">gt</span><span class="p">;</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">req</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">stream</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="nx">stream</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s2">&quot;;base64,&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">8</span><span class="p">,</span> <span class="nx">stream</span><span class="p">.</span><span class="nx">size</span><span class="p">),</span> <span class="s2">&quot;base64&quot;</span><span class="p">))</span>
+</span><span class='line'><span class="o">&lt;</span><span class="err">/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>  <span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>あとはknoxというnode.jsのs3用ライブラリを使い、S3にアップロード。</p>
+
+<p>Base64でデータが来るのでデコードしてるところがポイント。
+FileReaderではBinaryでもデータを読み取れるので、最初はそっちで試していたが
+どうしてもうまくいかないので、base64でエンコードされるDataURLにした。</p>
+
+<h2>注意</h2>
+
+<p>FileReaderを使っているので、FileReaderが実装されているブラウザじゃないと動きません。
+coffeeScriptで書いてるのでMeteor add coffeescriptするのを忘れずに。
+後は<a href="https://github.com/LearnBoost/knox">knox</a>をインストールするのを忘れずに。<a href="/blog/2012/05/27/meteor-require/">MeteorでNode.jsの外部ライブラリを使う方法</a></p>
+
+<h2>まとめ</h2>
+
+<p>書いてみると結構簡単だけど、ここまで来るのに結構時間がかかった。</p>
+
+<p>そもそもファイルってformからしか送れないと思ってたので、
+最初は<a href="http://aws.amazon.com/articles/1434">S3にHTMLだけでファイルアップする方法</a>でやろうかと思ったけど、それでは画面遷移が
+発生するのでリアルタイムアプリとしてはイケてない。</p>
+
+<p>XMLHttpRequest使って送る方法も見つけたけど、Meteorにルーティング機能がないので
+リクエスト先のURLをそもそも作れない。。。（　´・ω・）</p>
+
+<p>そこでたどり着いたのでMeteor.methodsですね。
+これにファイルのバイナリデータを渡せばいけるんじゃないかと！
+時間かかった分動いたときはちょっと感動しました(/ω＼)</p>
+
+<p>余談ですが、HTML5のFile APIすごいですね。ブラウザ側でバイナリで読み取ったりできるようになるとは。。
+そのうちブラウザだけで画像加工したりできるようになるんでしょうね。</p>
+
+<h2>参考サイト</h2>
+
+<ul>
+<li><a href="http://tmlife.net/programming/javascript/html5-file-api-file-read.html">HTML5 File API を使ってファイル読み込み</a></li>
+<li><a href="http://www.html5rocks.com/ja/tutorials/file/dndfiles/">JAVASCRIPT で FILE API を使用してファイルを読み取る</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[MeteorでNode.jsの外部ライブラリを使う方法]]></title>
