@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Node.js | Genki Note]]></title>
   <link href="http://genki0406.github.com/blog/categories/node-js/atom.xml" rel="self"/>
   <link href="http://genki0406.github.com/"/>
-  <updated>2012-05-27T22:34:27+09:00</updated>
+  <updated>2012-05-28T02:46:38+09:00</updated>
   <id>http://genki0406.github.com/</id>
   <author>
     <name><![CDATA[Genki]]></name>
@@ -12,6 +12,77 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[MeteorでNode.jsの外部ライブラリを使う方法]]></title>
+    <link href="http://genki0406.github.com/blog/2012/05/27/meteor-require/"/>
+    <updated>2012-05-27T22:00:00+09:00</updated>
+    <id>http://genki0406.github.com/blog/2012/05/27/meteor-require</id>
+    <content type="html"><![CDATA[<p>Meteorで外部ライブラリ、node modulesを使ったのでそのメモ
+結論からいうと調べた感じではやり方は２つ。</p>
+
+<h2>publicフォルダにインストールする</h2>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/.meteor
+</span><span class='line'>/client
+</span><span class='line'>/server
+</span><span class='line'>/public
+</span><span class='line'> /node_modules←ここにインストールする</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>publicフォルダはその名の通りpublicなフォルダなので
+セキュリティ的に微妙ですね。。。
+ただここにpackage.json置いてソース管理できるというメリットはあります
+serverフォルダに置ければ一番いいんですが、残念ながら置いてもうまく動かないようです</p>
+
+<h2>Meteorのlibフォルダに直接インストールする</h2>
+
+<p>ここに突っ込みます
+※自分の環境はMacです</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/usr/local/meteor/lib/node_modules</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>すると.meteorの下にここへのシンボリックリンクがあるので
+自動で読み込まれます。
+ソース管理が別々になってしまうというのはデメリットですが
+個人的にpublicに置くよりはいいと思ったので、今回はこっちを採用</p>
+
+<h2>require is not definedになる。。。</h2>
+
+<p>デフォルトではrequire使えないみたいですね。
+以下のように書いてあげましょう。</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>require = &lt;strong>meteor_bootstrap&lt;/strong>.require
+</span><span class='line'>knox = require "knox"</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>※coffeescriptで書いてます</p>
+
+<h2>感想とか</h2>
+
+<p>Meteorを触るようになって、日本語の情報が全然ないので。
+普通に英語のサイトを検索するようになりました。
+ドキュメントも英語のものをGoogle翻訳で一生懸命翻訳して
+なんとか読んでます。
+昔は英語の文章見るだけでアレルギー出てたんですが
+最近はあまり苦にならなくなってきました。
+この勢いで英語バリバリ読めるようになれるといいな！(｀・ω・´)</p>
+
+<h2>参考サイト</h2>
+
+<ul>
+<li><a href="http://stackoverflow.com/questions/tagged/meteor?sort=newest&amp;pagesize=15">Stack Overflow</a></li>
+<li><a href="http://stackoverflow.com/questions/10476170/how-can-i-deploy-node-modules-in-a-meteor-app-on-meteor-com">How can I deploy node modules in a Meteor app on meteor.com?</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Meteorのインストールで Failed dependencies]]></title>
