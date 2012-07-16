@@ -4,7 +4,7 @@
   <title><![CDATA[Genki Note]]></title>
   <link href="http://genki0406.github.com/atom.xml" rel="self"/>
   <link href="http://genki0406.github.com/"/>
-  <updated>2012-07-16T21:31:50+09:00</updated>
+  <updated>2012-07-16T21:38:23+09:00</updated>
   <id>http://genki0406.github.com/</id>
   <author>
     <name><![CDATA[Genki]]></name>
@@ -285,7 +285,7 @@ AWSのサービスDynamoDBについて色々教えてくれたんですが、そ
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">script_sample</span><span class="o">.</span><span class="n">rb</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># script_sample.rb</span>
 </span><span class='line'>
 </span><span class='line'><span class="nb">require</span> <span class="s1">&#39;mitsubachi.rb&#39;</span>
 </span><span class='line'>
