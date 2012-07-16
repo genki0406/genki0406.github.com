@@ -9,8 +9,8 @@
   <meta name="author" content="Genki">
 
   
-  <meta name="description" content="MeteorでS3にファイルアップロードしてみた。 MeteorはリアルタイムなWebアプリを作ることを前提に設計されているので、そもそもルーティングという考え方がない。
-URLに対してリクエストを送るのではなく、 サーバー側に実装したメソッドをクライアントから直接Callする。 &hellip;">
+  <meta name="description" content="先日のAWS鹿児島勉強会で株式会社マイニングブラウニーの代表得上さんが講師として来てくれました。
+AWSのサービスDynamoDBについて色々教えてくれたんですが、その後個人的にお話する機会があり得上さんの会社で展開しているクローラーサービスの話を聞いて、面白そうだったので触ってみました。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -77,6 +77,340 @@ URLに対してリクエストを送るのではなく、 サーバー側に実�
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/07/16/mitsubachi/">PaaSのクローラーサービスMitsubachiを使ってみる</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-16T20:25:00+09:00" pubdate data-updated="true">Jul 16<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>先日のAWS鹿児島勉強会で<a href="http://www.miningbrownie.co.jp/">株式会社マイニングブラウニー</a>の代表得上さんが講師として来てくれました。
+AWSのサービスDynamoDBについて色々教えてくれたんですが、その後個人的にお話する機会があり得上さんの会社で展開しているクローラーサービスの話を聞いて、面白そうだったので触ってみました。</p>
+
+<p>今回触ったのが<a href="http://www.mushikago.org/mitsubachi/">Mitsubachi</a>というサービスなんですが、PaaS型のクローラーサービスです。</p>
+
+<p>クローリングの内容を記述したスクリプトを作成し、Mitsubachi上にデプロイしておけば、後は実行するだけで勝手に情報を収集してきてくれるという優れもの。環境構築などは一切いりません。</p>
+
+<h2>まずはユーザー登録しましょう</h2>
+
+<p>Mitsubachiは従量課金制のサービスになっています、まずはユーザー登録してAPIキーとシークレットキーを取得しましょう。登録は<a href="https://member.mushikago.org/entry">ここから</a></p>
+
+<h2>クローラーを動かすまでのステップ</h2>
+
+<p>ユーザー登録が終わったら早速動かしてやるーーー！！とその前にMitsubachi上でクローラーを動かす時の大まかなステップを確認。</p>
+
+<ul>
+<li>Mitsubachi上にプロジェクトを作成</li>
+<li>実行するスクリプトをプロジェクト上にデプロイ</li>
+<li>デプロイしたスクリプトを実行</li>
+<li>実行が終わったか確認</li>
+<li>結果の取得</li>
+</ul>
+
+
+<h2>クローラーを動かそう！</h2>
+
+<p>プロジェクトを作る方法はCUIツールを使う方法と、SDK使って自分で書く方法と２種類あります。これについてはもう既に分かりやすいドキュメントが揃っているのでそっちを見たほうが早いです。</p>
+
+<ul>
+<li><a href="http://docs.mushikago.org/services/mitsubachi/guide/getstarted-guide.html">CUIツールを使ってやってみる</a></li>
+<li><a href="http://docs.mushikago.org/services/mitsubachi/guide/sample.html">SDKでやってみる</a></li>
+</ul>
+
+
+<p>僕は最初CUIツール使ってやった後に、SDKでやりました。ちなみに言語はPHPを選択しました。</p>
+
+<h2>SDKサンプルソースを修正し、YahooのTOPニュースを持ってきてみる</h2>
+
+<p>ほぼサンプルで記載されているものと同じですが、こんな感じで書いてみました。</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="x">/sample.php</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">&lt;?php</span>
+</span><span class='line'><span class="k">require_once</span> <span class="s1">&#39;mushikago-sdk/sdk.class.php&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="k">require_once</span><span class="p">(</span><span class="s1">&#39;mushikago-sdk/services/mitsubachi.php&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//mitsubachi APIのクライアントを作成します。</span>
+</span><span class='line'><span class="nv">$mitsubachi</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MushikagoMitsubachiClient</span><span class="p">();</span>
+</span><span class='line'><span class="nv">$project_name</span> <span class="o">=</span> <span class="s1">&#39;yahoo&#39;</span><span class="p">;</span> <span class="c1">//プロジェクト名</span>
+</span><span class='line'><span class="nv">$script_name</span> <span class="o">=</span> <span class="s1">&#39;script_sample.rb&#39;</span><span class="p">;</span> <span class="c1">// スクリプトファイルの保存名</span>
+</span><span class='line'><span class="nv">$file</span> <span class="o">=</span> <span class="nb">dirname</span><span class="p">(</span><span class="k">__FILE__</span><span class="p">)</span><span class="o">.</span><span class="s1">&#39;/script_sample.rb&#39;</span><span class="p">;</span> <span class="c1">// デプロイするスクリプトファイル、PHPで書こうと思ったけどRubyしか用意されてない？</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/********************************</span>
+</span><span class='line'><span class="sd">* 1. 準備-1：</span>
+</span><span class='line'><span class="sd">* スクリプトやクロール結果を</span>
+</span><span class='line'><span class="sd">* 保存する領域 (プロジェクト)を作成します。</span>
+</span><span class='line'><span class="sd">********************************/</span>
+</span><span class='line'><span class="nv">$stdout</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//標準出力(0:しない 1:する)。rubyスクリプトの puts などの出力に使用します。</span>
+</span><span class='line'><span class="nv">$stderr</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//標準エラー出力(0:しない 1:する)。システムエラーやスクリプトエラーのトレースログ出力に使用します。</span>
+</span><span class='line'><span class="nv">$system_log</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//システムログ出力フラグ(0:しない 1:する)。訪れたウェブページのアクセスログ出力に使用します。</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$result</span> <span class="o">=</span> <span class="nv">$mitsubachi</span><span class="o">-&gt;</span><span class="na">create_project</span><span class="p">(</span><span class="nv">$project_name</span><span class="p">,</span>  <span class="nv">$stdout</span><span class="p">,</span>  <span class="nv">$stderr</span><span class="p">,</span>  <span class="nv">$system_log</span><span class="p">);</span>
+</span><span class='line'><span class="nb">var_dump</span><span class="p">(</span><span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/********************************</span>
+</span><span class='line'><span class="sd">* 2. 準備-2：</span>
+</span><span class='line'><span class="sd">* 実行するスクリプトをプロジェクト上に</span>
+</span><span class='line'><span class="sd">* デプロイ(アップロード)します。</span>
+</span><span class='line'><span class="sd">********************************/</span>
+</span><span class='line'><span class="nv">$result</span> <span class="o">=</span> <span class="nv">$mitsubachi</span><span class="o">-&gt;</span><span class="na">deploy_script</span><span class="p">(</span><span class="nv">$project_name</span><span class="p">,</span>  <span class="nv">$script_name</span><span class="p">,</span>  <span class="nv">$file</span><span class="p">);</span>
+</span><span class='line'><span class="nb">var_dump</span><span class="p">(</span><span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/********************************</span>
+</span><span class='line'><span class="sd">* 3. クロールリクエスト：</span>
+</span><span class='line'><span class="sd">* デプロイしたスクリプトを実行します。</span>
+</span><span class='line'><span class="sd">********************************/</span>
+</span><span class='line'><span class="nv">$url</span> <span class="o">=</span> <span class="s2">&quot;http://www.yahoo.co.jp/&quot;</span><span class="p">;</span> <span class="c1">// クロールをスタートするページのURL</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$result</span> <span class="o">=</span> <span class="nv">$mitsubachi</span><span class="o">-&gt;</span><span class="na">fetch_http</span><span class="p">(</span><span class="nv">$project_name</span><span class="p">,</span>  <span class="nv">$url</span><span class="p">,</span>  <span class="nv">$script_name</span><span class="p">);</span>
+</span><span class='line'><span class="nb">var_dump</span><span class="p">(</span><span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/********************************</span>
+</span><span class='line'><span class="sd">* 4. 実行中の処理数を取得：</span>
+</span><span class='line'><span class="sd">* プロジェクト内で実行している処理の数を問い合わせます。</span>
+</span><span class='line'><span class="sd">* 処理がすべて完了するとゼロが返却されます。</span>
+</span><span class='line'><span class="sd">********************************/</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">while</span><span class="p">(</span><span class="k">true</span><span class="p">){</span>
+</span><span class='line'>  <span class="nb">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+</span><span class='line'>  <span class="nv">$result</span> <span class="o">=</span> <span class="nv">$mitsubachi</span><span class="o">-&gt;</span><span class="na">queues_project</span><span class="p">(</span><span class="nv">$project_name</span><span class="p">);</span>
+</span><span class='line'>  <span class="nb">var_dump</span><span class="p">(</span><span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span><span class="p">(</span><span class="nv">$result</span><span class="o">-&gt;</span><span class="na">response</span><span class="o">-&gt;</span><span class="na">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">break</span><span class="p">;</span> <span class="c1">// カウントが0になり、すべての処理が終わるまで無限ループ</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/********************************</span>
+</span><span class='line'><span class="sd">* 5. 作成したcsvファイルの保存先URL取得：</span>
+</span><span class='line'><span class="sd">* プロジェクト上に作成されたcsvファイルの保存先URLを</span>
+</span><span class='line'><span class="sd">* 取得します。</span>
+</span><span class='line'><span class="sd">********************************/</span>
+</span><span class='line'><span class="nv">$file_name</span> <span class="o">=</span> <span class="s1">&#39;information.csv&#39;</span><span class="p">;</span> <span class="c1">// csvファイル名</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$result</span> <span class="o">=</span> <span class="nv">$mitsubachi</span><span class="o">-&gt;</span><span class="na">get_resource</span><span class="p">(</span><span class="nv">$project_name</span><span class="p">,</span>  <span class="nv">$file_name</span><span class="p">);</span>
+</span><span class='line'><span class="nb">var_dump</span><span class="p">(</span><span class="nv">$result</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">/********************************</span>
+</span><span class='line'><span class="sd">* 6. 取得したURLからファイルをダウンロード：</span>
+</span><span class='line'><span class="sd">* csvファイルをダウンロードします。</span>
+</span><span class='line'><span class="sd">********************************/</span>
+</span><span class='line'><span class="nv">$csv</span> <span class="o">=</span> <span class="nv">$result</span><span class="o">-&gt;</span><span class="na">response</span><span class="o">-&gt;</span><span class="na">url</span><span class="p">;</span> <span class="c1">// 2.で取得したcsvファイルの保存先URL</span>
+</span><span class='line'><span class="nv">$file_name</span> <span class="o">=</span> <span class="nb">dirname</span><span class="p">(</span><span class="k">__FILE__</span><span class="p">)</span><span class="o">.</span><span class="s1">&#39;/information.csv&#39;</span><span class="p">;</span> <span class="c1">// 保存するcsvファイル名</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$data</span> <span class="o">=</span> <span class="nb">file_get_contents</span><span class="p">(</span><span class="nv">$csv</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">file_put_contents</span><span class="p">(</span><span class="nv">$file_name</span><span class="p">,</span>  <span class="nv">$data</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">script_sample</span><span class="o">.</span><span class="n">rb</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;mitsubachi.rb&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">###</span>
+</span><span class='line'><span class="c1"># CSVファイルを作成する一時ファイルを作成します。</span>
+</span><span class='line'><span class="c1">###</span>
+</span><span class='line'><span class="n">temp_file</span> <span class="o">=</span> <span class="no">Mitsubachi</span><span class="o">::</span><span class="no">TemporaryFile</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">root</span> <span class="o">=</span> <span class="vg">$e</span><span class="o">.</span><span class="n">getRootNode</span>
+</span><span class='line'><span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;ul.emphasis a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">a</span><span class="o">|</span>
+</span><span class='line'>  <span class="n">data</span> <span class="o">=</span> <span class="o">[]</span>
+</span><span class='line'>  <span class="n">data</span> <span class="o">&lt;&lt;</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span>
+</span><span class='line'>  <span class="n">data</span> <span class="o">&lt;&lt;</span> <span class="n">a</span><span class="o">.</span><span class="n">attr</span><span class="o">[</span><span class="s1">&#39;href&#39;</span><span class="o">]</span>
+</span><span class='line'>  <span class="n">temp_file</span><span class="o">.</span><span class="n">write_csv</span> <span class="n">data</span> <span class="c1"># 一時ファイルにCSVのデータを書き込みます。</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">client</span> <span class="o">=</span> <span class="vg">$e</span><span class="o">.</span><span class="n">create_mitsubachi_client</span>  <span class="c1"># mitsubachi APIを操作するクライアントを作成します。</span>
+</span><span class='line'><span class="n">client</span><span class="o">.</span><span class="n">simple_resource_store</span><span class="p">(</span><span class="n">temp_file</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>  <span class="s1">&#39;information.csv&#39;</span><span class="p">,</span>  <span class="s1">&#39;text/plain;&#39;</span><span class="p">)</span> <span class="c1"># ストレージ領域に保存します。</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>後は実行するだけ</h2>
+
+<p>ソースを書き終えたら早速ターミナルで実行！</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>php sample.php</span></code></pre></td></tr></table></div></figure>
+
+
+<p>するとsample.phpと同じ階層にinformation.csvが作成され、クローリング結果が記載されているではありませんか！ｽｹﾞ━━━━━━ヽ(ﾟДﾟ)ﾉ━━━━━━!!!!
+いやはや、これ使えばweb上にあるデータなんでもかんでも取りたい放題ですね。素晴らしい。</p>
+
+<h2>Mysqlに突っ込もうとしたけど。。</h2>
+
+<p>調子に乗った僕はcsvでは飽きたらず、DBに結果を突っ込むことにしました。これでweb上のすべてのデータをデータベース化してやる！！
+ちなみにMitsubachiはRDBMSとの連携を<a href="http://docs.mushikago.org/mitsubachi/scripting/ruby/frames.html">サポート</a>してます。</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">script_sample</span><span class="o">.</span><span class="n">rb</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;mitsubachi.rb&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">conn</span> <span class="o">=</span> <span class="no">Mitsubachi</span><span class="o">::</span><span class="no">RDBMS</span><span class="o">.</span><span class="n">new_connection</span><span class="p">(</span><span class="s1">&#39;mysql://ホスト名/&#39;</span><span class="p">,</span> <span class="s1">&#39;ユーザー名&#39;</span><span class="p">,</span> <span class="s1">&#39;パスワード&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">stmt</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">create_statement</span>
+</span><span class='line'><span class="n">stmt</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="s1">&#39;use yahoo&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">root</span> <span class="o">=</span> <span class="vg">$e</span><span class="o">.</span><span class="n">getRootNode</span>
+</span><span class='line'><span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;ul.emphasis a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">a</span><span class="o">|</span>
+</span><span class='line'>  <span class="n">stmt</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="s1">&#39;insert into yahoo(name, link) values(&quot;&#39;</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">+</span> <span class="s1">&#39;&quot;, &quot;&#39;</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">attr</span><span class="o">[</span><span class="s1">&#39;href&#39;</span><span class="o">]</span> <span class="o">+</span> <span class="s1">&#39;&quot;)&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">stmt</span><span class="o">.</span><span class="n">close</span>
+</span><span class='line'><span class="n">conn</span><span class="o">.</span><span class="n">close</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ふふふ、これでWeb上のすべてのデータは俺のものだ！(ΦωΦ)ﾌﾌﾌ
+しかし、実行してみるとスクリプトエラー。。。コネクション作る所でコケてるっぽい。。ターミナルからは普通につながるのになぜ。。あとで得上さんに聞いてみよ。</p>
+
+<h2>ひと通り触ってみた感想とか</h2>
+
+<p>環境構築せずにスクリプトだけ書いて、ぱっとWeb上からデータを持ってこれるのはすごいですね。今回紹介しませんでしたが、なんと人工知能を持ってるhanamgriというサービスもありまして。これを使えば解析先のHPのレイアウトが変わってもデータ持ってこれちゃうみたいです。パないですね。ただ使っていて何点か改善してほしい点もあったので記載しておきます。</p>
+
+<ul>
+<li>スクリプトのデプロイが面倒くさい(gitでできるようにして欲しい。。)</li>
+<li>デバッグしにくい(今回もRDBMSでこけたが、例外が発生しましたとしか記載されておらず、どの行でどんなエラーが起きてるのかわからない)</li>
+</ul>
+
+
+<p>得上さん良ければ改善をお願いします(._.)発展途上という感じですが、人工知能も含めかなり可能性を感じるサービスでした。web上のデータを好きに持ってこれるとなれば、これはすごいことですよね。データを解析して二次加工するとか、ビジネスになりそうな匂いがぷんぷんします。興味がある方は是非触って見てください。</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -907,6 +1241,10 @@ iPhoneとFostexは借りて来た。<br /></p></blockquote>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/07/16/mitsubachi/">PaaSのクローラーサービスMitsubachiを使ってみる</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/05/28/meteor-file-upload/">MeteorでS3にファイルをアップロードしてみる</a>
       </li>
     
@@ -920,10 +1258,6 @@ iPhoneとFostexは借りて来た。<br /></p></blockquote>
     
       <li class="post">
         <a href="/blog/2012/04/29/kagohack/">KagoHack 第2回に参加してきました</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/03/24/kagomug-1/">KAGOMUG勉強会</a>
       </li>
     
   </ul>
