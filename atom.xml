@@ -4,7 +4,7 @@
   <title><![CDATA[Genki Note]]></title>
   <link href="http://genki0406.github.com/atom.xml" rel="self"/>
   <link href="http://genki0406.github.com/"/>
-  <updated>2012-07-16T22:01:36+09:00</updated>
+  <updated>2012-07-16T22:59:46+09:00</updated>
   <id>http://genki0406.github.com/</id>
   <author>
     <name><![CDATA[Genki]]></name>
@@ -285,6 +285,8 @@ AWSのサービスDynamoDBについて色々教えてくれたんですが、そ
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
 </pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># script_sample.rb</span>
 </span><span class='line'>
 </span><span class='line'><span class="nb">require</span> <span class="s1">&#39;mitsubachi.rb&#39;</span>
@@ -295,7 +297,9 @@ AWSのサービスDynamoDBについて色々教えてくれたんですが、そ
 </span><span class='line'>
 </span><span class='line'><span class="n">root</span> <span class="o">=</span> <span class="vg">$e</span><span class="o">.</span><span class="n">getRootNode</span>
 </span><span class='line'><span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;ul.emphasis a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">a</span><span class="o">|</span>
-</span><span class='line'>  <span class="n">stmt</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="s1">&#39;insert into yahoo(name, link) values(&quot;&#39;</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">+</span> <span class="s1">&#39;&quot;, &quot;&#39;</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">attr</span><span class="o">[</span><span class="s1">&#39;href&#39;</span><span class="o">]</span> <span class="o">+</span> <span class="s1">&#39;&quot;)&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="c1"># stmt.execute_query(&#39;insert into yahoo(name, link) values(&quot;&#39; + a.text + &#39;&quot;, &quot;&#39; + a.attr[&#39;href&#39;] + &#39;&quot;)&#39;)</span>
+</span><span class='line'>  <span class="c1"># update及びinsertの時はexecute_updateを使う</span>
+</span><span class='line'>  <span class="n">stmt</span><span class="o">.</span><span class="n">execute_update</span><span class="p">(</span><span class="s1">&#39;insert into yahoo(name, link) values(&quot;&#39;</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">+</span> <span class="s1">&#39;&quot;, &quot;&#39;</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">attr</span><span class="o">[</span><span class="s1">&#39;href&#39;</span><span class="o">]</span> <span class="o">+</span> <span class="s1">&#39;&quot;)&#39;</span><span class="p">)</span>
 </span><span class='line'><span class="k">end</span>
 </span><span class='line'>
 </span><span class='line'><span class="n">stmt</span><span class="o">.</span><span class="n">close</span>
@@ -305,6 +309,10 @@ AWSのサービスDynamoDBについて色々教えてくれたんですが、そ
 
 <p>ふふふ、これでWeb上のすべてのデータは俺のものだ！(ΦωΦ)ﾌﾌﾌ
 しかし、実行してみるとスクリプトエラー。。。コネクション作る所でコケてるっぽい。。ターミナルからは普通につながるのになぜ。。あとで得上さんに聞いてみよ。</p>
+
+<h3>追記</h3>
+
+<p>得上さんから回答もらいました、update及びinsertの時はexecute_updateを使えばいいとのこと、試して見ると無事Mysqlにデータが入りました！やったね！</p>
 
 <h2>ひと通り触ってみた感想とか</h2>
 
