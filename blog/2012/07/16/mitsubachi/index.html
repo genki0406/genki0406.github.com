@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>PaaSのクローラーサービスMitsubachiを使ってみる - Genki Note</title>
+  <title>PaaSのクローラーサービスmitsubachiを使ってみる - Genki Note</title>
   <meta name="author" content="Genki">
 
   
@@ -80,7 +80,7 @@ AWSのサービスDynamoDBについて色々教えてくれたんですが、そ
   
   <header>
     
-      <h1 class="entry-title">PaaSのクローラーサービスMitsubachiを使ってみる</h1>
+      <h1 class="entry-title">PaaSのクローラーサービスmitsubachiを使ってみる</h1>
     
     
       <p class="meta">
@@ -106,20 +106,20 @@ AWSのサービスDynamoDBについて色々教えてくれたんですが、そ
 <div class="entry-content"><p>先日のAWS鹿児島勉強会で<a href="http://www.miningbrownie.co.jp/">株式会社マイニングブラウニー</a>の代表得上さんが講師として来てくれました。
 AWSのサービスDynamoDBについて色々教えてくれたんですが、その後個人的にお話する機会があり得上さんの会社で展開しているクローラーサービスの話を聞いて、面白そうだったので触ってみました。</p>
 
-<p>今回触ったのが<a href="http://www.mushikago.org/mitsubachi/">Mitsubachi</a>というサービスなんですが、PaaS型のクローラーサービスです。</p>
+<p>今回触ったのが<a href="http://www.mushikago.org/mitsubachi/">mitsubachi</a>というサービスなんですが、PaaS型のクローラーサービスです。</p>
 
-<p>クローリングの内容を記述したスクリプトを作成し、Mitsubachi上にデプロイしておけば、後は実行するだけで勝手に情報を収集してきてくれるという優れもの。環境構築などは一切いりません。</p>
+<p>クローリングの内容を記述したスクリプトを作成し、mitsubachi上にデプロイしておけば、後は実行するだけで勝手に情報を収集してきてくれるという優れもの。環境構築などは一切いりません。</p>
 
 <h2>まずはユーザー登録しましょう</h2>
 
-<p>Mitsubachiは従量課金制のサービスになっています、まずはユーザー登録してAPIキーとシークレットキーを取得しましょう。登録は<a href="https://member.mushikago.org/entry">ここから</a></p>
+<p>mitsubachiは従量課金制のサービスになっています、まずはユーザー登録してAPIキーとシークレットキーを取得しましょう。登録は<a href="https://member.mushikago.org/entry">ここから</a></p>
 
 <h2>クローラーを動かすまでのステップ</h2>
 
-<p>ユーザー登録が終わったら早速動かしてやるーーー！！とその前にMitsubachi上でクローラーを動かす時の大まかなステップを確認。</p>
+<p>ユーザー登録が終わったら早速動かしてやるーーー！！とその前にmitsubachi上でクローラーを動かす時の大まかなステップを確認。</p>
 
 <ul>
-<li>Mitsubachi上にプロジェクトを作成</li>
+<li>mitsubachi上にプロジェクトを作成</li>
 <li>実行するスクリプトをプロジェクト上にデプロイ</li>
 <li>デプロイしたスクリプトを実行</li>
 <li>実行が終わったか確認</li>
@@ -324,7 +324,7 @@ AWSのサービスDynamoDBについて色々教えてくれたんですが、そ
 </span><span class='line'><span class="c1">###</span>
 </span><span class='line'><span class="c1"># CSVファイルを作成する一時ファイルを作成します。</span>
 </span><span class='line'><span class="c1">###</span>
-</span><span class='line'><span class="n">temp_file</span> <span class="o">=</span> <span class="no">Mitsubachi</span><span class="o">::</span><span class="no">TemporaryFile</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'><span class="n">temp_file</span> <span class="o">=</span> <span class="n">mitsubachi</span><span class="o">::</span><span class="no">TemporaryFile</span><span class="o">.</span><span class="n">new</span>
 </span><span class='line'>
 </span><span class='line'><span class="n">root</span> <span class="o">=</span> <span class="vg">$e</span><span class="o">.</span><span class="n">getRootNode</span>
 </span><span class='line'><span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;ul.emphasis a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">a</span><span class="o">|</span>
@@ -353,7 +353,7 @@ AWSのサービスDynamoDBについて色々教えてくれたんですが、そ
 <h2>Mysqlに突っ込もうとしたけど。。</h2>
 
 <p>調子に乗った僕はcsvでは飽きたらず、DBに結果を突っ込むことにしました。これでweb上のすべてのデータをデータベース化してやる！！
-ちなみにMitsubachiはRDBMSとの連携を<a href="http://docs.mushikago.org/mitsubachi/scripting/ruby/frames.html">サポート</a>してます。</p>
+ちなみにmitsubachiはRDBMSとの連携を<a href="http://docs.mushikago.org/mitsubachi/scripting/ruby/frames.html">サポート</a>してます。</p>
 
 <figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -467,7 +467,7 @@ AWSのサービスDynamoDBについて色々教えてくれたんですが、そ
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2012/07/16/mitsubachi/">PaaSのクローラーサービスMitsubachiを使ってみる</a>
+        <a href="/blog/2012/07/16/mitsubachi/">PaaSのクローラーサービスmitsubachiを使ってみる</a>
       </li>
     
       <li class="post">
